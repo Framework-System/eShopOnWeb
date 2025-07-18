@@ -7,6 +7,7 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.eShopWeb.RazorPages.Interfaces;
@@ -106,26 +107,23 @@ namespace Microsoft.eShopWeb.RazorPages
             // Add memory cache services
             services.AddMemoryCache();
 
-            services.AddMvc()
-                .SetCompatibilityVersion(AspNetCore.Mvc.CompatibilityVersion.Version_2_1)
-                .AddRazorPagesOptions(options =>
-                {
-                    options.Conventions.AuthorizeFolder("/Order");
-                    options.Conventions.AuthorizePage("/Basket/Checkout");
-                });
+            services.AddRazorPages(options =>
+            {
+                options.Conventions.AuthorizeFolder("/Order");
+                options.Conventions.AuthorizePage("/Basket/Checkout");
+            });
 
             _services = services;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app,
-            IHostingEnvironment env)
+            IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 ListAllRegisteredServices(app);
-                app.UseDatabaseErrorPage();
             }
             else
             {
@@ -135,9 +133,14 @@ namespace Microsoft.eShopWeb.RazorPages
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseRouting();
             app.UseAuthentication();
+            app.UseAuthorization();
 
-            app.UseMvc();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapRazorPages();
+            });
         }
 
         private void ListAllRegisteredServices(IApplicationBuilder app)
